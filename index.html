@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PyBasics Arena</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1120; --panel:#161c33; --panel2:#1d2545; --line:#2a3256;
+  --text:#e9ecfa; --muted:#8892bd;
+  --mint:#4ade9e; --coral:#ff6b6b; --amber:#ffd166; --violet:#7c8cff;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){ --bg:#0d1120; --panel:#161c33; --panel2:#1d2545; --text:#e9ecfa; }
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+body{
+  margin:0; min-height:100%; background:var(--bg); color:var(--text);
+  font-family:'Space Grotesk',sans-serif; overflow-x:hidden;
+}
+.wrap{max-width:760px;margin:0 auto;padding:28px 18px 40px;}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+.brand .dot{width:10px;height:10px;border-radius:50%;background:var(--mint);box-shadow:0 0 12px var(--mint);}
+.brand span{font-family:'JetBrains Mono',monospace;color:var(--muted);font-size:13px;letter-spacing:.5px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:28px;position:relative;overflow:hidden;}
+.screen{display:none;} .screen.active{display:block;animation:rise .45s ease;}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* START */
+h1.title{font-size:clamp(28px,6vw,40px);margin:6px 0 8px;line-height:1.05;}
+h1.title em{font-style:normal;color:var(--mint);}
+.sub{color:var(--muted);margin:0 0 22px;font-size:15px;max-width:52ch;}
+.topics{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px;}
+.topics span{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--panel2);border:1px solid var(--line);padding:6px 10px;border-radius:8px;color:var(--violet);}
+.field{margin-bottom:20px;}
+.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px;}
+.field input{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:13px 14px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:15px;}
+.field input:focus{outline:2px solid var(--mint);border-color:var(--mint);}
+.btn{border:none;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;padding:14px 22px;border-radius:12px;transition:transform .15s ease;}
+.btn:active{transform:scale(.97);}
+.btn:focus-visible{outline:2px solid var(--mint);outline-offset:2px;}
+.btn-primary{background:var(--mint);color:#06281a;width:100%;}
+.btn-ghost{background:transparent;color:var(--violet);border:1px solid var(--line);}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+
+/* QUIZ */
+.topbar{display:flex;align-items:center;gap:16px;margin-bottom:20px;}
+.progress-track{flex:1;height:8px;background:var(--panel2);border-radius:6px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--mint),var(--violet));border-radius:6px;transition:width .35s ease;}
+.qcount{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted);white-space:nowrap;}
+.timer-ring{position:relative;width:52px;height:52px;flex-shrink:0;}
+.timer-ring svg{transform:rotate(-90deg);width:52px;height:52px;}
+.timer-ring circle{fill:none;stroke-width:5;}
+.timer-ring .bg{stroke:var(--panel2);}
+.timer-ring .fg{stroke:var(--amber);stroke-linecap:round;transition:stroke-dashoffset 1s linear,stroke .2s;}
+.timer-ring .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;}
+.score-chip{font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--panel2);border:1px solid var(--line);padding:8px 12px;border-radius:10px;color:var(--mint);}
+.qtext{font-size:clamp(18px,3.4vw,22px);font-weight:700;line-height:1.4;margin:6px 0 24px;min-height:56px;}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media (max-width:520px){.options{grid-template-columns:1fr;}}
+.opt{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:15px 16px;text-align:left;font-family:'Space Grotesk',sans-serif;font-size:14.5px;color:var(--text);cursor:pointer;transition:border-color .15s,transform .1s;}
+.opt:hover{border-color:var(--violet);}
+.opt:disabled{cursor:default;}
+.opt.correct{background:rgba(74,222,158,.16);border-color:var(--mint);animation:pop .4s ease;}
+.opt.wrong{background:rgba(255,107,107,.16);border-color:var(--coral);animation:shake .4s ease;}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.04)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.feedback{margin-top:18px;font-family:'JetBrains Mono',monospace;font-size:13px;min-height:20px;}
+.feedback.good{color:var(--mint);} .feedback.bad{color:var(--coral);}
+.streak{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--amber);margin-top:4px;min-height:16px;}
+
+/* RESULT */
+.result-hero{text-align:center;padding:10px 0 20px;}
+.result-hero .big{font-family:'JetBrains Mono',monospace;font-size:56px;font-weight:700;color:var(--mint);line-height:1;}
+.result-hero .of{color:var(--muted);font-size:16px;margin-top:4px;}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0 26px;}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 10px;text-align:center;}
+.stat b{display:block;font-family:'JetBrains Mono',monospace;font-size:19px;color:var(--violet);}
+.stat span{font-size:11.5px;color:var(--muted);}
+.link-row{text-align:center;margin-top:16px;}
+.link-row a{color:var(--violet);font-size:13.5px;cursor:pointer;text-decoration:underline;}
+
+/* LEADERBOARD */
+.lb-row{display:flex;align-items:center;gap:12px;padding:12px 10px;border-bottom:1px solid var(--line);font-size:14px;}
+.lb-row:last-child{border-bottom:none;}
+.lb-rank{font-family:'JetBrains Mono',monospace;color:var(--muted);width:28px;}
+.lb-name{flex:1;font-weight:700;}
+.lb-score{font-family:'JetBrains Mono',monospace;color:var(--mint);}
+.lb-empty{color:var(--muted);font-size:13.5px;text-align:center;padding:20px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><div class="dot"></div><span>PYBASICS ARENA</span></div>
+
+  <!-- START SCREEN -->
+  <section id="start" class="screen active card">
+    <h1 class="title">Test your <em>Python</em> fundamentals.</h1>
+    <p class="sub">50 questions on variables, data types, user input, type conversion and comments. Beat the clock, keep your streak alive.</p>
+    <div class="topics">
+      <span>variables</span><span>data types</span><span>input()</span><span>type conversion</span><span>comments</span>
+    </div>
+    <div class="field">
+      <label for="pname">Your name (for the leaderboard)</label>
+      <input id="pname" maxlength="18" placeholder="e.g. Arjun">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="startQuiz()">Start quiz →</button>
+      <button class="btn btn-ghost" onclick="showLeaderboard(false)">Leaderboard</button>
+    </div>
+  </section>
+
+  <!-- QUIZ SCREEN -->
+  <section id="quiz" class="screen card">
+    <div class="topbar">
+      <div class="timer-ring">
+        <svg viewBox="0 0 52 52"><circle class="bg" cx="26" cy="26" r="22"/><circle id="ringFg" class="fg" cx="26" cy="26" r="22"/></svg>
+        <div class="num" id="ringNum">15</div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="pfill" style="width:0%"></div></div>
+      <div class="qcount" id="qcount">1 / 50</div>
+    </div>
+    <div class="score-chip" id="scoreChip" style="margin-bottom:16px;display:inline-block;">Score: 0</div>
+    <div class="qtext" id="qtext"></div>
+    <div class="options" id="options"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="streak" id="streakMsg"></div>
+  </section>
+
+  <!-- RESULT SCREEN -->
+  <section id="result" class="screen card">
+    <div class="result-hero">
+      <div class="big" id="finalScore">0</div>
+      <div class="of">out of 50 correct</div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat"><b id="statAcc">0%</b><span>Accuracy</span></div>
+      <div class="stat"><b id="statStreak">0</b><span>Best streak</span></div>
+      <div class="stat"><b id="statTime">0s</b><span>Total time</span></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="startQuiz()">Play again</button>
+      <button class="btn btn-ghost" onclick="location.reload()">Home</button>
+    </div>
+    <div class="link-row"><a onclick="showLeaderboard(true)">View all results →</a></div>
+  </section>
+
+  <!-- LEADERBOARD SCREEN -->
+  <section id="leaderboard" class="screen card">
+    <h1 class="title" style="font-size:24px;">Leaderboard</h1>
+    <p class="sub" style="margin-bottom:18px;">Best attempts saved on this device.</p>
+    <div id="lbList"></div>
+    <div class="btn-row" style="margin-top:22px;">
+      <button class="btn btn-ghost" id="lbBack" onclick="backFromLeaderboard()">← Back</button>
+    </div>
+  </section>
+</div>
+
+<script>
+const BANK = [
+["Which symbol is used to write a single-line comment in Python?",["#","//","/* */","--"],"#"],
+["What is the correct way to declare a variable named age with value 25?",["age = 25","int age = 25","var age = 25","declare age = 25"],"age = 25"],
+["Which of these is a valid variable name?",["_score","2score","score-1","score name"],"_score"],
+["What is the data type of the value True in Python?",["bool","int","str","float"],"bool"],
+["Which function is used to take input from the user?",["input()","read()","scan()","get()"],"input()"],
+["What is the data type returned by input()?",["str","int","float","bool"],"str"],
+["Which function converts a string to an integer?",["int()","str()","float()","bool()"],"int()"],
+["What is the type of the result of 5 / 2 in Python?",["float","int","str","bool"],"float"],
+["What is the type of the result of 5 // 2 in Python?",["int","float","str","bool"],"int"],
+["Which is Python's multi-line comment style?",["Triple quotes \"\"\" \"\"\"","## ##","/* */","<!-- -->"],"Triple quotes \"\"\" \"\"\""],
+["What does the type() function do?",["Returns the data type of a value","Converts data type","Deletes a variable","Prints a variable"],"Returns the data type of a value"],
+["Which of these is an immutable data type?",["Tuple","List","Dictionary","Set"],"Tuple"],
+["What is x after: x = 10; x = x + 5 ?",["15","10","5","Error"],"15"],
+["Which built-in checks a variable's type?",["type()","typeof()","gettype()","kind()"],"type()"],
+["What is the correct file extension for Python files?",[".py",".pt",".pyt",".pyth"],".py"],
+["Which of the following is NOT a Python data type?",["character","int","float","complex"],"character"],
+["What does float('3.14') return?",["3.14 as a float","'3.14' as a string","3 as an int","An error"],"3.14 as a float"],
+["Which operator is used for exponentiation?",["**","^","exp()","pow"],"**"],
+["What is bool(0)?",["False","True","0","Error"],"False"],
+["What is bool(1)?",["True","False","1","Error"],"True"],
+["Which correctly converts an integer to a string?",["str(25)","string(25)","(str)25","convert(25)"],"str(25)"],
+["Correct inline comment syntax?",["x = 5  # assign value","x = 5  // assign value","x = 5  ** assign value","x = 5  -- assign value"],"x = 5  # assign value"],
+["Which of these is a valid float literal?",["3.14","3,14","'3.14'","3/14"],"3.14"],
+["What does input(\"Enter name: \") do?",["Shows the prompt and waits for input","Only displays text","Only takes input silently","Throws an error"],"Shows the prompt and waits for input"],
+["What is the data type of the value 10?",["int","float","str","bool"],"int"],
+["What is the data type of the value 10.5?",["float","int","str","bool"],"float"],
+["Which is a valid multiple assignment?",["a, b = 1, 2","a = b = 1, 2","a & b = 1 & 2","a, b := 1, 2"],"a, b = 1, 2"],
+["What does type(5) print?",["<class 'int'>","<class 'float'>","<class 'str'>","<class 'bool'>"],"<class 'int'>"],
+["How do you convert the string '10' to an integer?",["int('10')","integer('10')","toInt('10')","num('10')"],"int('10')"],
+["Which symbol means 'not equal to'?",["!=","<>","~=","=/="],"!="],
+["What is a variable, in simple terms?",["A named location that stores data","A fixed, unchanging value","A type of loop","A comment"],"A named location that stores data"],
+["Which of these is a reserved keyword?",["class","classname","myclass","class1"],"class"],
+["What happens when you run int('abc')?",["It raises a ValueError","It returns 0","It returns None","It works fine"],"It raises a ValueError"],
+["Best data type to store a person's name?",["str","int","float","bool"],"str"],
+["What is the purpose of comments in code?",["Explain code to humans; Python ignores them","Make code run faster","Declare variables","Import modules"],"Explain code to humans; Python ignores them"],
+["Inside the string \"I love #python\", what does # do?",["Nothing — it's just a character","Comments out the rest of the line","Causes a syntax error","Converts text to int"],"Nothing — it's just a character"],
+["What is str(True)?",["'True'","True","1","Error"],"'True'"],
+["Correct way to take two separate inputs on two lines?",["a = input(); b = input()","a, b = input()","input(a, b)","a = b = input()"],"a = input(); b = input()"],
+["What is the result of 10 == '10' in Python?",["False","True","Error","10"],"False"],
+["Which function converts a value to a boolean?",["bool()","boolean()","tobool()","bl()"],"bool()"],
+["What is the data type of [1, 2, 3]?",["list","tuple","set","dict"],"list"],
+["Assign 0 to x, y and z in one line:",["x = y = z = 0","x, y, z = 0","x = 0, y = 0, z = 0","x & y & z = 0"],"x = y = z = 0"],
+["What is int(7.9)?",["7","8","7.9","Error"],"7"],
+["Read a number and convert it to int in one line:",["age = int(input())","age = input(int())","age = int input()","age = (int)input()"],"age = int(input())"],
+["Comments are ignored by:",["The Python interpreter","The keyboard","The variable","The input function"],"The Python interpreter"],
+["What is the data type of None?",["NoneType","null","void","undefined"],"NoneType"],
+["Which of these raises an error?",["int('abc')","int('123')","str(123)","float(5)"],"int('abc')"],
+["What does type(3.0) print?",["<class 'float'>","<class 'int'>","<class 'str'>","<class 'complex'>"],"<class 'float'>"],
+["Which best describes Python's dynamic typing?",["No need to declare a variable's type explicitly","All variables must be declared as int","A variable's type can never change","Python has no data types at all"],"No need to declare a variable's type explicitly"],
+["Correct way to comment above a block of code:",["# This explains the code below","<!-- This explains code -->","// This explains code","** This explains code"],"# This explains the code below"]
+];
+
+const TIME_PER_Q = 15, RADIUS = 22, CIRC = 2*Math.PI*RADIUS;
+let order=[], idx=0, score=0, streak=0, bestStreak=0, timer=null, timeLeft=TIME_PER_Q, startedAt=0, playerName="Player";
+const els = id=>document.getElementById(id);
+const ringFg = els('ringFg');
+ringFg.style.strokeDasharray = CIRC;
+
+function shuffle(a){ a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); els(id).classList.add('active'); }
+
+function startQuiz(){
+  playerName = (els('pname').value||'').trim() || 'Player';
+  order = shuffle(BANK.map((_,i)=>i));
+  idx=0; score=0; streak=0; bestStreak=0; startedAt=Date.now();
+  show('quiz');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  clearInterval(timer);
+  const [q, opts, correct] = BANK[order[idx]];
+  els('qcount').textContent = `${idx+1} / ${BANK.length}`;
+  els('pfill').style.width = (idx/BANK.length*100)+'%';
+  els('scoreChip').textContent = 'Score: '+score;
+  els('qtext').textContent = q;
+  els('feedback').textContent=''; els('feedback').className='feedback';
+  els('streakMsg').textContent = streak>1 ? `🔥 ${streak} in a row` : '';
+
+  const box = els('options'); box.innerHTML='';
+  shuffle(opts).forEach(text=>{
+    const b = document.createElement('button');
+    b.className='opt'; b.textContent=text;
+    b.onclick = ()=>answer(b, text, correct);
+    box.appendChild(b);
+  });
+
+  timeLeft = TIME_PER_Q;
+  updateRing();
+  timer = setInterval(()=>{
+    timeLeft--; updateRing();
+    if(timeLeft<=0){ clearInterval(timer); lockOptions(); revealCorrect(correct); streak=0;
+      els('feedback').textContent="⏱ Time's up!"; els('feedback').className='feedback bad';
+      setTimeout(next, 900); }
+  },1000);
+}
+
+function updateRing(){
+  const pct = timeLeft/TIME_PER_Q;
+  ringFg.style.strokeDashoffset = CIRC*(1-pct);
+  ringFg.style.stroke = pct<0.3 ? 'var(--coral)' : 'var(--amber)';
+  els('ringNum').textContent = timeLeft;
+}
+
+function lockOptions(){ document.querySelectorAll('.opt').forEach(o=>o.disabled=true); }
+function revealCorrect(correct){
+  document.querySelectorAll('.opt').forEach(o=>{ if(o.textContent===correct) o.classList.add('correct'); });
+}
+
+function answer(btn, chosen, correct){
+  clearInterval(timer);
+  lockOptions();
+  if(chosen===correct){
+    btn.classList.add('correct'); score++; streak++; bestStreak=Math.max(bestStreak,streak);
+    els('feedback').textContent='✓ Correct!'; els('feedback').className='feedback good';
+  } else {
+    btn.classList.add('wrong'); revealCorrect(correct); streak=0;
+    els('feedback').textContent='✗ Not quite.'; els('feedback').className='feedback bad';
+  }
+  els('scoreChip').textContent='Score: '+score;
+  setTimeout(next, 800);
+}
+
+function next(){
+  idx++;
+  if(idx>=BANK.length){ finish(); } else { renderQuestion(); }
+}
+
+function finish(){
+  clearInterval(timer);
+  els('pfill').style.width='100%';
+  const totalSec = Math.round((Date.now()-startedAt)/1000);
+  els('finalScore').textContent = score;
+  els('statAcc').textContent = Math.round(score/BANK.length*100)+'%';
+  els('statStreak').textContent = bestStreak;
+  els('statTime').textContent = totalSec+'s';
+  saveResult(playerName, score, totalSec);
+  show('result');
+}
+
+function saveResult(name, score, secs){
+  try{
+    const key='pybasics_results';
+    const list = JSON.parse(localStorage.getItem(key)||'[]');
+    list.push({name, score, secs, at: Date.now()});
+    localStorage.setItem(key, JSON.stringify(list));
+  }catch(e){ /* storage unavailable */ }
+}
+
+function getResults(){
+  try{ return JSON.parse(localStorage.getItem('pybasics_results')||'[]'); }
+  catch(e){ return []; }
+}
+
+function showLeaderboard(fromResult){
+  const list = getResults().sort((a,b)=>b.score-a.score || a.secs-b.secs).slice(0,15);
+  const box = els('lbList');
+  if(!list.length){ box.innerHTML = '<div class="lb-empty">No results yet — play a round to appear here.</div>'; }
+  else{
+    box.innerHTML = list.map((r,i)=>`
+      <div class="lb-row">
+        <div class="lb-rank">#${i+1}</div>
+        <div class="lb-name">${escapeHtml(r.name)}</div>
+        <div class="lb-score">${r.score}/${BANK.length} · ${r.secs}s</div>
+      </div>`).join('');
+  }
+  els('lbBack').dataset.from = fromResult ? 'result' : 'start';
+  show('leaderboard');
+}
+function backFromLeaderboard(){ show(els('lbBack').dataset.from || 'start'); }
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+</script>
+</body>
+</html>
